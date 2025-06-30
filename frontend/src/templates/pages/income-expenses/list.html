@@ -1,0 +1,47 @@
+<section class="income-expenses">
+    <div class="container">
+        <div class="income-expenses_title">Доходы и расходы</div>
+        <div class="income-expenses-action d-flex">
+            <button type="button" class="btn btn-success" id="createIncome">Создать доход</button>
+            <button type="button" class="btn btn-danger" id="createExpense">Создать расход</button>
+        </div>
+        <div class="income-expenses_switch btn-group d-flex gap-3" role="group" aria-label="Basic radio toggle button group" >
+            <input type="radio" class="btn-check" name="btnradio" id="btnradio0" autocomplete="off">
+            <label class="btn btn-outline-secondary" for="btnradio0">Сегодня</label>
+            <input type="radio" class="btn-check" name="btnradio" id="btnradio1" autocomplete="off">
+            <label class="btn btn-outline-secondary" for="btnradio1">Неделя</label>
+            <input type="radio" class="btn-check" name="btnradio" id="btnradio2" autocomplete="off">
+            <label class="btn btn-outline-secondary" for="btnradio2">Месяц</label>
+            <input type="radio" class="btn-check" name="btnradio" id="btnradio3" autocomplete="off" checked>
+            <label class="btn btn-outline-secondary" for="btnradio3">Год</label>
+            <input type="radio" class="btn-check" name="btnradio" id="btnradio4" autocomplete="off">
+            <label class="btn btn-outline-secondary" for="btnradio4">Все</label>
+            <input type="radio" class="btn-check" name="btnradio" id="btnradio5" autocomplete="off">
+            <label class="btn btn-outline-secondary" for="btnradio5">Интервал</label>
+
+            <div class="income-expenses_switch-data d-flex">
+                <label for="startDate">с</label>
+                <input type="text" class="datepicker" placeholder="Дата" id="startDate">
+                <label for="endDate">по</label>
+                <input type="text" class="datepicker" placeholder="Дата" id="endDate">
+            </div>
+        </div>
+        <div class="income-expenses_table" id="incomeExpensesTable">
+            <table id="data-table" class="table table-bordered table-striped">
+                <thead>
+                <tr>
+                    <th>№ операции</th>
+                    <th>Тип</th>
+                    <th>Категория</th>
+                    <th>Сумма</th>
+                    <th>Дата</th>
+                    <th>Комментарий</th>
+                    <th></th>
+                </tr>
+                </thead>
+                <tbody id="records">
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>

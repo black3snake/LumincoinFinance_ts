@@ -1,0 +1,36 @@
+{
+  "name": "LumincoinFinanceTs",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "dev": "webpack serve --open",
+    "build": "webpack"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "bootstrap": "^5.3.6",
+    "bootstrap-datepicker": "^1.10.0",
+    "chart.js": "^4.4.9",
+    "datatables": "^1.10.18",
+    "datatables.net-dt": "^2.3.2",
+    "dotenv-webpack": "^8.1.0",
+    "icheck-bootstrap": "^3.0.1",
+    "jquery": "^3.7.1",
+    "moment": "^2.30.1"
+  },
+  "devDependencies": {
+    "copy-webpack-plugin": "^13.0.0",
+    "css-loader": "^7.1.2",
+    "html-webpack-plugin": "^5.6.3",
+    "mini-css-extract-plugin": "^2.9.2",
+    "sass": "^1.89.0",
+    "sass-loader": "^16.0.5",
+    "style-loader": "^4.0.0",
+    "webpack": "^5.99.9",
+    "webpack-cli": "^6.0.1",
+    "webpack-dev-server": "^5.2.1"
+  }
+}

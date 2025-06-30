@@ -5,7 +5,7 @@ const Dotenv = require('dotenv-webpack');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 
 module.exports = {
-    entry: './src/app.js',
+    entry: './src/app.ts',
     mode: 'development',
     devtool: "inline-source-map",
     output: {
@@ -25,19 +25,6 @@ module.exports = {
     },
     module: {
         rules: [
-            // {
-            //   test: /\.(woff|woff2|eot|ttf|otf)$/,
-            //   use: [
-            //       {
-            //           loader: 'file-loader',
-            //           options: {
-            //               name: '[name].[ext]',
-            //               outputPath: 'fonts',
-            //               publicPath: 'fonts',
-            //           }
-            //       }
-            //   ]
-            // },
             {
                 test: /\.(woff|woff2|eot|ttf|otf)$/i,
                 type: 'asset/resource',
@@ -50,15 +37,21 @@ module.exports = {
                 test: /\.scss$/i,
                 use: [
                     MiniCssExtractPlugin.loader,
-                    // Creates `style` nodes from JS strings
-                    // "style-loader",
                     // Translates CSS into CommonJS
                     "css-loader",
                     // Compiles Sass to CSS
                     "sass-loader",
                 ],
             },
+            {
+                test: /\.tsx?$/,
+                use: 'ts-loader',
+                exclude: /node_modules/,
+            },
         ],
+    },
+    resolve: {
+        extensions: ['.tsx', '.ts', '.js'],
     },
     plugins: [
         new Dotenv(),

@@ -1,4 +1,4 @@
-import {AuthUtils} from "./auth-utils.js";
+import {AuthUtils} from "./auth-utils.ts";
 import config from "../config/config";
 
 export class HttpUtils {

@@ -17,8 +17,20 @@ import {IncomeDelete} from "./components/income/income-delete";
 import {ExpensesDelete} from "./components/expenses/expenses-delete";
 import {IncomeExpensesDelete} from "./components/income-expenses/income-expenses-delete";
 import {BalanceService} from "./services/balance-service";
+import {RouteType} from "./types/route.type";
+import {UserInfoNameType} from "./types/user-info-name.type";
+import {UserInfoType} from "./types/user-info.type";
 
 export class Router {
+    private titlePageElement: HTMLElement | null;
+    private contentPageElement: HTMLElement | null;
+    private bootstrapStyleElement: HTMLElement | null;
+
+    private routes: RouteType[];
+    private balanceElement: HTMLElement | null = null;
+    private profileNameElement: HTMLElement | null = null;
+    private userName: string | null = null;
+
     constructor() {
         this.titlePageElement = document.getElementById('title');
         this.contentPageElement = document.getElementById('content');
@@ -197,26 +209,28 @@ export class Router {
         document.addEventListener('click', this.clickHandler.bind(this));
     }
 
-    async openNewRoute(url) {
-        const currentRoute = window.location.pathname;
+    private async openNewRoute(url: string): Promise<void> {
+        const currentRoute: string | null = window.location.pathname;
         history.pushState({}, '', url);
         await this.activateRoute(null, currentRoute);
 
     }
 
-    async clickHandler(e) {
-
-        let element = null;
-        if (e.target.nodeName === 'A') {
-            element = e.target;
-        } else if (e.target.parentNode.nodeName === 'A') {
-            element = e.target.parentNode;
+    private async clickHandler(e: MouseEvent): Promise<void> {
+        let element: HTMLAnchorElement | null = null;
+        const target = e.target as HTMLElement;
+        if (target) {
+            if (target.nodeName === 'A') {
+                element = e.target as HTMLAnchorElement;
+            } else if (target.parentNode && (target.parentNode as HTMLElement).nodeName === 'A') {
+                element = target.parentNode as HTMLAnchorElement;
+            }
         }
         if (element) {
             e.preventDefault();
 
-            const currentRoute = window.location.pathname;
-            const url = element.href.replace(window.location.origin, '');
+            const currentRoute: string | null = window.location.pathname;
+            const url: string | null = element.href.replace(window.location.origin, '');
             if (!url || (currentRoute === url.replace('#', '')) || url.startsWith('javascript:void(0)') || url.includes('income-expenses/delete')) {
                 return;
             }
@@ -225,28 +239,32 @@ export class Router {
         }
     }
 
-    async activateRoute(e, oldRoute = null) {
+    async activateRoute(e: Event | null, oldRoute: string | null = null): Promise<void> {
         if (oldRoute) {
-            const currentRoute = this.routes.find(item => item.route === oldRoute);
-            if (currentRoute.styles && currentRoute.styles.length > 0) {
-                currentRoute.styles.forEach(style => {
-                    document.querySelector(`link[href='/css/${style}']`).remove();
-                })
-            }
-            if (currentRoute.scripts && currentRoute.scripts.length > 0) {
-                currentRoute.scripts.forEach(script => {
-                    document.querySelector(`script[src='/js/${script}']`).remove();
-                })
-            }
-            // console.log(currentRoute);
-            if (currentRoute.unload && typeof currentRoute.unload === 'function') {
-                currentRoute.unload();
+            const currentRoute: RouteType | undefined = this.routes.find(item => item.route === oldRoute);
+            if (currentRoute) {
+                if (currentRoute.styles && currentRoute.styles.length > 0) {
+                    currentRoute.styles.forEach(style => {
+                        const link: Element | null = document.querySelector(`link[href='/css/${style}']`);
+                        if (link) link.remove();
+                    })
+                }
+                if (currentRoute.scripts && currentRoute.scripts.length > 0) {
+                    currentRoute.scripts.forEach(script => {
+                        const link: Element | null = document.querySelector(`script[src='/js/${script}']`);
+                        if (link) link.remove();
+                    })
+                }
+                // console.log(currentRoute);
+                if (currentRoute.unload && typeof currentRoute.unload === 'function') {
+                    currentRoute.unload();
+                }
             }
         }
 
 
-        const urlRoute = window.location.pathname;
-        const newRoute = this.routes.find(item => item.route === urlRoute);
+        const urlRoute: string | null = window.location.pathname;
+        const newRoute: RouteType | undefined = this.routes.find(item => item.route === urlRoute);
         if (newRoute) {
             if (newRoute.styles && newRoute.styles.length > 0) {
                 newRoute.styles.forEach(style => {
@@ -260,33 +278,40 @@ export class Router {
 
             }
 
-            if (newRoute.title) {
+            if (newRoute.title && this.titlePageElement) {
                 this.titlePageElement.innerText = newRoute.title + ' | LumincoinFinance';
                 console.log(newRoute.title);
             }
 
             if (newRoute.filePathTemplate) {
                 // document.body.className = '';
-                let contentBlock = this.contentPageElement;
-                if (newRoute.useLayout) {
+                let contentBlock: HTMLElement | null = this.contentPageElement;
+                if (newRoute.useLayout && this.contentPageElement) {
                     this.contentPageElement.innerHTML =
-                        await fetch(newRoute.useLayout).then(response => response.text());
+                        await fetch((newRoute.useLayout as string)).then(response => response.text());
+                    // const response:Response = await fetch((newRoute.useLayout as string));
+                    // this.contentPageElement.innerHTML = await response.text();
+
                     contentBlock = document.getElementById('content-layout');
                     // document.body.classList.add('sidebar-mini');
                     // document.body.classList.add('layout-fixed');
 
                     this.balanceElement = document.getElementById('balance');
                     const userBalance = await BalanceService.getBalance();
-                    this.balanceElement.innerText = userBalance.balance + '$';
+                    if (this.balanceElement) {
+                        this.balanceElement.innerText = userBalance.balance + '$';
+                    }
 
                     this.profileNameElement = document.getElementById('profile-name');
                     if (!this.userName) {
-                        const userInfo = AuthUtils.getAuthInfo(AuthUtils.userinfoTokenKey) ? JSON.parse(AuthUtils.getAuthInfo(AuthUtils.userinfoTokenKey)) : '';
-                        if (userInfo && userInfo.name) {
-                            this.userName = userInfo.name;
+                        const userInfo: UserInfoType | UserInfoNameType = AuthUtils.getAuthInfo(AuthUtils.userinfoTokenKey) ? JSON.parse(AuthUtils.getAuthInfo(AuthUtils.userinfoTokenKey)) : '';
+                        if (userInfo && (userInfo as UserInfoNameType).name) {
+                            this.userName = (userInfo as UserInfoNameType).name;
                         }
                     }
-                    this.profileNameElement.innerText = this.userName;
+                    if (this.profileNameElement && this.userName) {
+                        this.profileNameElement.innerText = this.userName;
+                    }
                     this.dropdown();
 
                     this.activateMenuItem(newRoute);
@@ -294,9 +319,10 @@ export class Router {
                     document.body.classList.remove('sidebar-mini');
                     document.body.classList.remove('layout-fixed');
                 }
-                contentBlock.innerHTML =
-                    await fetch(newRoute.filePathTemplate).then(response => response.text());
-
+                if (contentBlock) {
+                    contentBlock.innerHTML =
+                        await fetch(newRoute.filePathTemplate).then(response => response.text());
+                }
 
             }
 
@@ -311,42 +337,51 @@ export class Router {
         }
     }
 
-    activateMenuItem(route) {
-        const menuCategoryElement = document.getElementById('menu_category');
+    private activateMenuItem(route: RouteType): void {
+        const menuCategoryElement: HTMLElement | null = document.getElementById('menu_category');
 
         document.querySelectorAll('.sidebar .nav-link').forEach(item => {
-            const href = item.getAttribute('href');
-            if ((route.route.includes(href) && href !== '/') || (route.route === '/' && href === '/')) {
-                if ((route.route.includes(href) && href !== '/income') || (route.route === '/income' && href === '/income')) {
-                    item.classList.add('active');
-                    if (['/income', '/expenses'].includes(href)) {
-                        menuCategoryElement.classList.remove('collapsed')
-                        menuCategoryElement.setAttribute('aria-expanded', true);
-                        let showMenu = menuCategoryElement.nextElementSibling;
-                        showMenu.classList.add('show');
-                    }
-                }
-            } else {
-                item.classList.remove('active');
-            }
+            const href: string | null = item.getAttribute('href');
+             if (href) {
+                 if ((route.route.includes(href) && href !== '/') || (route.route === '/' && href === '/')) {
+                     if ((route.route.includes(href) && href !== '/income') || (route.route === '/income' && href === '/income')) {
+                         item.classList.add('active');
+                         if (['/income', '/expenses'].includes(href) && menuCategoryElement) {
+                             menuCategoryElement.classList.remove('collapsed')
+                             menuCategoryElement.setAttribute('aria-expanded', 'true');
+                             let showMenu: Element | null = menuCategoryElement.nextElementSibling;
+                             if (showMenu) {
+                                 showMenu.classList.add('show');
+                             }
+                         }
+                     }
+                 } else {
+                     item.classList.remove('active');
+                 }
+             }
         })
     }
 
-    dropdown() {
-        let hideTimeout;
-        const dropdownElement = document.getElementById('dropdown');
-        const menu = dropdownElement.querySelector('.dropdown-menu');
+    private dropdown(): void {
+        let hideTimeout: number | undefined;
+        const dropdownElement: HTMLElement | null = document.getElementById('dropdown');
+        if (!dropdownElement) return;
+
+        const menu: Element | null = dropdownElement.querySelector('.dropdown-menu');
         dropdownElement.addEventListener('mouseenter', () => {
             clearTimeout(hideTimeout);
-            menu.classList.add('show');
+            if (menu) {
+                menu.classList.add('show');
+            }
         });
 
         dropdownElement.addEventListener('mouseleave', () => {
-            hideTimeout = setTimeout(() => {
-                menu.classList.remove('show');
-            },1000)
+            hideTimeout = window.setTimeout(() => {
+                if (menu) {
+                    menu.classList.remove('show');
+                }
+            }, 1000)
         });
-
 
 
     }

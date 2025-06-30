@@ -1,12 +1,15 @@
 import config from "../config/config";
+import {UserInfoType} from "../types/user-info.type";
+import {AuthRefreshType} from "../types/auth-refresh.type";
+import {AuthErrorType} from "../types/auth-error.type";
 
 export class AuthUtils {
-    static accessTokenKey = 'accessToken';
-    static refreshTokenKey = 'refreshToken';
-    static userinfoTokenKey = 'userinfo';
+    static accessTokenKey: string = 'accessToken';
+    static refreshTokenKey: string = 'refreshToken';
+    static userinfoTokenKey: string = 'userinfo';
 
 
-    static setAuthInfo(accessToken, refreshToken, userinfo = null) {
+    public static setAuthInfo(accessToken: string, refreshToken: string, userinfo: string | null = null): void {
         localStorage.setItem(this.accessTokenKey, accessToken);
         localStorage.setItem(this.refreshTokenKey, refreshToken);
         if (userinfo) {
@@ -14,14 +17,14 @@ export class AuthUtils {
         }
     }
 
-    static removeAuthInfo() {
+    public static removeAuthInfo(): void {
         localStorage.removeItem(this.accessTokenKey);
         localStorage.removeItem(this.refreshTokenKey);
         localStorage.removeItem(this.userinfoTokenKey);
 
     }
 
-    static getAuthInfo(key = null) {
+    public static getAuthInfo(key: string | null = null): UserInfoType {
         if (key && [this.accessTokenKey, this.refreshTokenKey, this.userinfoTokenKey].includes(key)) {
             return localStorage.getItem(key)
         } else {
@@ -34,11 +37,11 @@ export class AuthUtils {
         }
     }
 
-    static async updateRefreshToken() {
-        let result = false;
-        const refreshToken = this.getAuthInfo(this.refreshTokenKey);
+    public static async updateRefreshToken(): Promise<boolean> {
+        let result: boolean = false;
+        const refreshToken: UserInfoType = this.getAuthInfo(this.refreshTokenKey);
         if (refreshToken) {
-            const response = await fetch(config.api + '/refresh', {
+            const response: Response = await fetch(config.api + '/refresh', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -47,9 +50,9 @@ export class AuthUtils {
                 body: JSON.stringify({refreshToken: refreshToken})
             })
             if (response && response.status === 200) {
-                const tokens = await response.json();
-                if (tokens && !tokens.error) {
-                    AuthUtils.setAuthInfo(tokens.tokens.accessToken, tokens.tokens.refreshToken);
+                const tokens: AuthRefreshType | AuthErrorType = await response.json();
+                if (tokens && !(tokens as AuthErrorType).error) {
+                    AuthUtils.setAuthInfo((tokens as AuthRefreshType).tokens.accessToken, (tokens as AuthRefreshType).tokens.refreshToken);
                     result = true;
                 }
             }

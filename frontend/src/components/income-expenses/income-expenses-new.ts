@@ -4,20 +4,40 @@ import {IncomeService} from "../../services/income-service";
 import {ExpensesService} from "../../services/expenses-service";
 import {OperationsService} from "../../services/operations-service";
 import moment from "moment";
+import {OpenNewRouteHandlerType} from "../../types/open-new-route-handler.type";
+import {ValidationsType} from "../../types/validations.type";
+import {DatePikOptionType} from "../../types/date-pik-option.type";
+import {IncomeCategory, IncomeServiceReturnObjType} from "../../types/income-service-return-obj.type";
+import {ExpensesServiceReturnObjType} from "../../types/expenses-service-return-obj.type";
+import {CreateDataType} from "../../types/create-data.type";
+import {OperationsServiceReturnObjIdType} from "../../types/operations-service-return-obj.type";
 
 export class IncomeExpensesNew {
-    constructor(openNewRoute) {
-        this.openNewRoute = openNewRoute;
-        const path = UrlUtils.getUrlParam('path');
-        if (!path) {
-            return this.openNewRoute('/income-expenses');
-        }
+    readonly openNewRoute: OpenNewRouteHandlerType;
+    private typeSelectElement: HTMLElement | null;
+    private categorySelectElement: HTMLElement | null;
+    private amountElement: HTMLElement | null;
+    private dateElement: HTMLElement | null;
+    private commentElement: HTMLElement | null;
+    private validations: ValidationsType[] = [];
+    private incomeExpensesNewDate: string | null;
+    private incomeExpensesNewCreateBtnElement: HTMLElement | null;
 
+    constructor(openNewRoute: OpenNewRouteHandlerType) {
+        this.openNewRoute = openNewRoute;
         this.typeSelectElement = document.getElementById('incomeExpensesNew_typeSelect');
         this.categorySelectElement = document.getElementById('incomeExpensesNew_categorySelect');
         this.amountElement = document.getElementById('incomeExpensesNew_amount');
         this.dateElement = document.getElementById('incomeExpensesNew_date');
         this.commentElement = document.getElementById('incomeExpensesNew_comment');
+        this.incomeExpensesNewCreateBtnElement = document.getElementById('incomeExpensesNewCreateBtn')
+        this.incomeExpensesNewDate = null;
+
+        const path: string | null = UrlUtils.getUrlParam('path');
+        if (!path) {
+            this.openNewRoute('/income-expenses');
+            return;
+        }
 
         this.validations = [
             {element: this.categorySelectElement},
@@ -26,13 +46,13 @@ export class IncomeExpensesNew {
             {element: this.commentElement},
         ]
 
-        this.incomeExpensesNewDate = null;
-        const datePikOption = {
+
+        const datePikOption: DatePikOptionType = {
             format: 'dd.mm.yyyy',
             autoclose: true,
             language: "ru"
         }
-        $('#incomeExpensesNew_date').datepicker(datePikOption).on('changeDate', (e) => {
+        $('#incomeExpensesNew_date').datepicker(datePikOption).on('changeDate', (e: DatepickerChangeDateEventInterface) => {
             this.incomeExpensesNewDate = moment(e.date).format('YYYY-MM-DD');
             console.log(this.incomeExpensesNewDate);
         });
@@ -40,23 +60,28 @@ export class IncomeExpensesNew {
 
         this.init(path);
 
-        document.getElementById('incomeExpensesNewCreateBtn').addEventListener('click', this.saveOperation.bind(this));
-
+        if (this.incomeExpensesNewCreateBtnElement) {
+            this.incomeExpensesNewCreateBtnElement.addEventListener('click', this.saveOperation.bind(this));
+        }
     }
 
-    init(path) {
+    private init(path: string): void {
         // отключим первый select
         ['click', 'mousedown', 'keydown', 'focus'].forEach(evt => {
-            this.typeSelectElement.addEventListener(evt, e => {
-                e.preventDefault();
-                e.stopPropagation();
-            });
+            if (this.typeSelectElement) {
+                this.typeSelectElement.addEventListener(evt, e => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                });
+            }
         });
 
         // заполним поля
-        for (let i = 0; i < this.typeSelectElement.options.length; i++) {
-            if (this.typeSelectElement.options[i].value === path) {
-                this.typeSelectElement.selectedIndex = i;
+        if (this.typeSelectElement) {
+            for (let i = 0; i < (this.typeSelectElement as HTMLSelectElement).options.length; i++) {
+                if ((this.typeSelectElement as HTMLSelectElement).options[i].value === path) {
+                    (this.typeSelectElement as HTMLSelectElement).selectedIndex = i;
+                }
             }
         }
         if (path.includes('income')) {
@@ -66,8 +91,8 @@ export class IncomeExpensesNew {
         }
     }
 
-    async getIncomes() {
-        const response = await IncomeService.getIncomes();
+    private async getIncomes(): Promise<void | null> {
+        const response: IncomeServiceReturnObjType = await IncomeService.getIncomes();
 
         if (response.error) {
             // alert(response.error);
@@ -78,18 +103,24 @@ export class IncomeExpensesNew {
         const option0 = new Option("Категория...", "", true, true);
         option0.hidden = true;
         option0.disabled = true;
-        this.categorySelectElement.insertBefore(option0, this.categorySelectElement.firstChild);
+        if (this.categorySelectElement) {
+            this.categorySelectElement.insertBefore(option0, this.categorySelectElement.firstChild);
+        }
 
-        for (let i = 0; i < response.incomes.length; i++) {
-            const option = document.createElement("option");
-            option.value = response.incomes[i].id;
-            option.innerText = response.incomes[i].title;
-            this.categorySelectElement.appendChild(option);
+        if (response.incomes && Array.isArray(response.incomes)) {
+            for (let i = 0; i < response.incomes.length; i++) {
+                const option: HTMLElement | null = document.createElement("option");
+                (option as HTMLSelectElement).value = response.incomes[i].id.toString();
+                option.innerText = response.incomes[i].title;
+                if (this.categorySelectElement) {
+                    this.categorySelectElement.appendChild(option);
+                }
+            }
         }
     }
 
-    async getExpenses() {
-        const response = await ExpensesService.getExpenses();
+    private async getExpenses(): Promise<void | null> {
+        const response: ExpensesServiceReturnObjType = await ExpensesService.getExpenses();
 
         if (response.error) {
             // alert(response.error);
@@ -100,29 +131,36 @@ export class IncomeExpensesNew {
         const option0 = new Option("Категория...", "", true, true);
         option0.hidden = true;
         option0.disabled = true;
-        this.categorySelectElement.insertBefore(option0, this.categorySelectElement.firstChild);
+        if (this.categorySelectElement) {
+            this.categorySelectElement.insertBefore(option0, this.categorySelectElement.firstChild);
+        }
 
-        for (let i = 0; i < response.expenses.length; i++) {
-            const option = document.createElement("option");
-            option.value = response.expenses[i].id;
-            option.innerText = response.expenses[i].title;
-            this.categorySelectElement.appendChild(option);
+        if (response.expenses && Array.isArray(response.expenses)) {
+            for (let i = 0; i < response.expenses.length; i++) {
+                const option:HTMLOptionElement = document.createElement("option");
+                option.value = response.expenses[i].id.toString();
+                option.innerText = response.expenses[i].title;
+                if (this.categorySelectElement) {
+                    this.categorySelectElement.appendChild(option);
+                }
+            }
         }
     }
 
-    async saveOperation(e) {
+    private async saveOperation(e: Event): Promise<void | null> {
         e.preventDefault();
 
-        if (ValidationUtils.validationForm(this.validations)) {
-            const createData = {
-                type: this.typeSelectElement.value,
-                amount: this.amountElement.value,
+        if (ValidationUtils.validationForm(this.validations) && this.typeSelectElement && this.amountElement &&
+            this.commentElement && this.categorySelectElement) {
+            const createData: CreateDataType = {
+                type: (this.typeSelectElement as HTMLSelectElement).value,
+                amount: parseInt((this.amountElement as HTMLInputElement).value),
                 date: this.incomeExpensesNewDate,
-                comment: this.commentElement.value,
-                category_id: parseInt(this.categorySelectElement.value)
+                comment: (this.commentElement as HTMLInputElement).value,
+                category_id: parseInt((this.categorySelectElement as HTMLSelectElement).value)
             };
 
-            const response = await OperationsService.createOperation(createData);
+            const response: OperationsServiceReturnObjIdType = await OperationsService.createOperation(createData);
 
             if (response.error) {
                 // alert(response.error);

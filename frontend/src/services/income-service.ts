@@ -1,18 +1,25 @@
 import {HttpUtils} from "../utils/http-utils";
+import {
+    IncomeCategoriesDeleteResponse,
+    IncomeCategoriesResponse, IncomeServiceReturnObjDeleteType, IncomeServiceReturnObjIdType,
+    IncomeServiceReturnObjType
+} from "../types/income-service-return-obj.type";
+import {ChangeDataType} from "../types/change-data.type";
+import {CreateDataType} from "../types/create-data.type";
 
 export class IncomeService {
-    static async getIncomes() {
-        const returnObject = {
+    public static async getIncomes(): Promise<IncomeServiceReturnObjType> {
+        const returnObject: IncomeServiceReturnObjType = {
             error: false,
-            redirect: null,
+            redirect: '',
             incomes: null
         };
 
-        const result = await HttpUtils.request('/categories/income');
+        const result: IncomeCategoriesResponse = await HttpUtils.request('/categories/income');
 
         if (result.redirect || result.error || !result.response) {
             // (result.response && (result.response.error || !result.response.message || result.response.message))) {
-            returnObject.error = 'Возникла ошибка при запросе доходов';
+            console.log('Возникла ошибка при запросе доходов');
             if (result.redirect) {
                 returnObject.redirect = result.redirect;  // перевод пользователя на другую страницу
             }
@@ -22,35 +29,36 @@ export class IncomeService {
         return returnObject;
     }
 
-    static async getIncome(id) {
-        const returnObject = {
+    static async getIncome(id: string): Promise<IncomeServiceReturnObjType> {
+        const returnObject: IncomeServiceReturnObjType = {
+            error: false,
+            redirect: '',
+            incomes: null
+        };
+
+        const result: IncomeCategoriesResponse = await HttpUtils.request('/categories/income/' + id);
+
+        if (result.redirect || result.error || !result.response) {
+            console.log('Возникла ошибка при запросе дохода');
+            if (result.redirect) {
+                returnObject.redirect = result.redirect;  // перевод пользователя на другую страницу
+            }
+            return returnObject;
+        }
+        returnObject.incomes = result.response;
+        return returnObject;
+    }
+
+    public static async updateIncome(id: number, data: ChangeDataType): Promise<IncomeServiceReturnObjType> {
+        const returnObject: IncomeServiceReturnObjType = {
             error: false,
             redirect: null,
             incomes: null
         };
 
-        const result = await HttpUtils.request('/categories/income/' + id);
-
+        const result: IncomeCategoriesResponse = await HttpUtils.request('/categories/income/' + id, 'PUT', true, data);
         if (result.redirect || result.error || !result.response) {
-            returnObject.error = 'Возникла ошибка при запросе дохода';
-            if (result.redirect) {
-                returnObject.redirect = result.redirect;  // перевод пользователя на другую страницу
-            }
-            return returnObject;
-        }
-        returnObject.incomes = result.response;
-        return returnObject;
-    }
-
-    static async updateIncome(id, data) {
-        const returnObject = {
-            error: false,
-            redirect: null
-        };
-
-        const result = await HttpUtils.request('/categories/income/' + id, 'PUT', true, data);
-        if (result.redirect || result.error || !result.response || (result.response && result.response.error)) {
-            returnObject.error = 'Возникла ошибка при редактировании дохода';
+            console.log('Возникла ошибка при редактировании дохода');
             if (result.redirect) {
                 returnObject.redirect = result.redirect;  // перевод пользователя на другую страницу
             }
@@ -59,17 +67,17 @@ export class IncomeService {
         return returnObject;
     }
 
-    static async createIncome(data) {
-        const returnObject = {
+    public static async createIncome(data: CreateDataType): Promise<IncomeServiceReturnObjIdType> {
+        const returnObject: IncomeServiceReturnObjIdType = {
             error: false,
             redirect: null,
             id: null
         };
 
-        const result = await HttpUtils.request('/categories/income', 'POST', true, data);
+        const result: IncomeCategoriesResponse = await HttpUtils.request('/categories/income', 'POST', true, data);
 
-        if (result.redirect || result.error || !result.response ) {
-            returnObject.error = 'Возникла ошибка при добавлении дохода';
+        if (result.redirect || result.error || !result.response) {
+            console.log('Возникла ошибка при добавлении дохода');
             if (result.redirect) {
                 returnObject.redirect = result.redirect;  // перевод пользователя на другую страницу
             }
@@ -79,16 +87,16 @@ export class IncomeService {
         return returnObject;
     }
 
-    static async deleteIncome(id) {
-        const returnObject = {
+    static async deleteIncome(id: string): Promise<IncomeServiceReturnObjDeleteType> {
+        const returnObject: IncomeServiceReturnObjDeleteType = {
             error: false,
             redirect: null,
         };
 
-        const result = await HttpUtils.request('/categories/income/' + id, 'DELETE');
+        const result: IncomeCategoriesDeleteResponse = await HttpUtils.request('/categories/income/' + id, 'DELETE');
 
-        if (result.redirect || result.error || !result.response ) {
-            returnObject.error = 'Возникла ошибка при удалении заказа';
+        if (result.redirect || result.error || !result.response) {
+            console.log('Возникла ошибка при удалении заказа');
             if (result.redirect) {
                 returnObject.redirect = result.redirect;  // перевод пользователя на другую страницу
             }

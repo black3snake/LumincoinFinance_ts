@@ -1,19 +1,25 @@
 import {UrlUtils} from "../../utils/url-utils";
 import {ExpensesService} from "../../services/expenses-service";
+import {OpenNewRouteHandlerType} from "../../types/open-new-route-handler.type";
+import {ExpensesServiceReturnObjDeleteType} from "../../types/expenses-service-return-obj.type";
 
 export class ExpensesDelete {
-    constructor(openNewRoute) {
+    readonly openNewRoute: OpenNewRouteHandlerType;
+
+    constructor(openNewRoute: OpenNewRouteHandlerType) {
         this.openNewRoute = openNewRoute;
-        const id = UrlUtils.getUrlParam('id');
+
+        const id: string | null = UrlUtils.getUrlParam('id');
         if (!id) {
-            return this.openNewRoute('/');
+            this.openNewRoute('/');
+            return;
         }
 
         this.deleteExpense(id).then();
     }
 
-    async deleteExpense(id) {
-        const response = await ExpensesService.deleteExpense(id);
+    private async deleteExpense(id: string): Promise<void| null> {
+        const response: ExpensesServiceReturnObjDeleteType = await ExpensesService.deleteExpense(id);
 
         if (response.error) {
             // alert(response.error);

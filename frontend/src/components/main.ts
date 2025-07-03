@@ -3,13 +3,42 @@ import moment from "moment/moment";
 import {IncomeService} from "../services/income-service";
 import {ExpensesService} from "../services/expenses-service";
 import {OperationsService} from "../services/operations-service";
+import {OpenNewRouteHandlerType} from "../types/open-new-route-handler.type";
+import {PeriodDateType} from "../types/period-date.type";
+import {DatePikOptionType} from "../types/date-pik-option.type";
+import {DataForChartType} from "../types/data-for-chart.type";
+import {IncomeCategory, IncomeServiceReturnObjType} from "../types/income-service-return-obj.type";
+import {ExpensesCategory, ExpensesServiceReturnObjType} from "../types/expenses-service-return-obj.type";
+import {OperationsServiceReturnObjType} from "../types/operations-service-return-obj.type";
 
 export class Main {
-    constructor(openNewRoute) {
+    readonly openNewRoute: OpenNewRouteHandlerType;
+    private ctxLeft: HTMLElement | null;
+    private ctxRight: HTMLElement | null;
+    private intervalInputElement: HTMLElement | null;
+    private startDateElement: JQuery<HTMLElement>;
+    private endDateElement: JQuery<HTMLElement>;
+    private periodDate: PeriodDateType;
+    private startDate: Date | null;
+    private endDate: Date | null;
+    private dataForChart: DataForChartType;
+    private myPieChartL: Chart<'pie'> | null = null;
+    private myPieChartR: Chart<'pie'> | null = null;
+
+
+    constructor(openNewRoute: OpenNewRouteHandlerType) {
         this.openNewRoute = openNewRoute;
 
-        this.ctxLeft = document.getElementById('myPieChart-left').getContext('2d');
-        this.ctxRight = document.getElementById('myPieChart-right').getContext('2d');
+        this.ctxLeft = document.getElementById('myPieChart-left');
+        if (this.ctxLeft) {
+            (this.ctxLeft as HTMLCanvasElement).getContext('2d');
+        }
+
+        this.ctxRight = document.getElementById('myPieChart-right');
+        if (this.ctxRight) {
+            (this.ctxRight as HTMLCanvasElement).getContext('2d');
+        }
+
         this.intervalInputElement = document.getElementById('btnradio5');
         this.startDateElement = $('#startDate');
         this.endDateElement = $('#endDate');
@@ -17,13 +46,15 @@ export class Main {
         const than = this;
         document.querySelectorAll('.main_switch input.btn-check').forEach(item => {
             item.addEventListener('click', (e) => {
-                if (e.target.checked) {
+                if ((e.target as HTMLInputElement).checked) {
                     // console.log(e.target);
-                    console.log(item.nextElementSibling.innerText);
-                    if (!item.nextElementSibling.innerText.includes('Интервал')) {
-                        than.startDateElement.val('');
-                        than.endDateElement.val('');
-                        than.getOperations(than.funcFilter(item.nextElementSibling.innerText)).then();
+                    // console.log(item.nextElementSibling.innerText);
+                    if (item.nextElementSibling) {
+                        if (!(item.nextElementSibling as HTMLInputElement).innerText.includes('Интервал')) {
+                            than.startDateElement.val('');
+                            than.endDateElement.val('');
+                            than.getOperations(than.funcFilter((item.nextElementSibling as HTMLInputElement).innerText)).then();
+                        }
                     }
                 }
             })
@@ -38,38 +69,42 @@ export class Main {
 
         this.startDate = null;
         this.endDate = null;
-        const datePikOption = {
+        const datePikOption: DatePikOptionType = {
             format: 'dd.mm.yyyy',
             autoclose: true,
             language: "ru"
         }
-        this.startDateElement.datepicker(datePikOption).on('changeDate', (e) => {
-            if (this.intervalInputElement.checked) {
-                this.endDateElement.datepicker('setStartDate', e.date);
-                this.startDate = e.date;
-                // console.log(this.startDate);
-                if (this.startDate && this.endDate) {
-                    this.periodDate.dateFrom = moment(this.startDate).format('YYYY-MM-DD');
-                    this.periodDate.dateTo = moment(this.endDate).format('YYYY-MM-DD');
-                    this.getOperations(this.funcFilter('Интервал')).then();
+        this.startDateElement.datepicker(datePikOption).on('changeDate', (e: DatepickerChangeDateEventInterface) => {
+            if (this.intervalInputElement) {
+                if ((this.intervalInputElement as HTMLInputElement).checked) {
+                    this.endDateElement.datepicker('setStartDate', e.date);
+                    this.startDate = e.date;
+                    // console.log(this.startDate);
+                    if (this.startDate && this.endDate) {
+                        this.periodDate.dateFrom = moment(this.startDate).format('YYYY-MM-DD');
+                        this.periodDate.dateTo = moment(this.endDate).format('YYYY-MM-DD');
+                        this.getOperations(this.funcFilter('Интервал')).then();
+                    }
+                } else {
+                    this.startDateElement.val('');
                 }
-            } else {
-                this.startDateElement.val('');
             }
         });
 
-        this.endDateElement.datepicker(datePikOption).on('changeDate', (e) => {
-            if (this.intervalInputElement.checked) {
-                this.endDateElement.datepicker('setEndDate', e.date);
-                this.endDate = e.date;
-                // console.log(this.endDate.toISOString());
-                if (this.startDate && this.endDate) {
-                    this.periodDate.dateFrom = moment(this.startDate).format('YYYY-MM-DD');
-                    this.periodDate.dateTo = moment(this.endDate).format('YYYY-MM-DD');
-                    this.getOperations(this.funcFilter('Интервал')).then();
+        this.endDateElement.datepicker(datePikOption).on('changeDate', (e: DatepickerChangeDateEventInterface) => {
+            if (this.intervalInputElement) {
+                if ((this.intervalInputElement as HTMLInputElement).checked) {
+                    this.endDateElement.datepicker('setEndDate', e.date);
+                    this.endDate = e.date;
+                    // console.log(this.endDate.toISOString());
+                    if (this.startDate && this.endDate) {
+                        this.periodDate.dateFrom = moment(this.startDate).format('YYYY-MM-DD');
+                        this.periodDate.dateTo = moment(this.endDate).format('YYYY-MM-DD');
+                        this.getOperations(this.funcFilter('Интервал')).then();
+                    }
+                } else {
+                    this.endDateElement.val('');
                 }
-            } else {
-                this.endDateElement.val('');
             }
         });
 
@@ -93,18 +128,18 @@ export class Main {
                 'rgba(153, 102, 255, 0.8)',
                 'rgb(255,0,255)',
             ],
-            operationIncomes: null,
-            operationExpenses: null,
+            operationIncomes: [],
+            operationExpenses: [],
         }
 
         this.init().then();
 
     }
 
-    async init() {
-        const incomeData = await this.getIncomes();
-        const expenseData = await this.getExpenses();
-        if (incomeData && expenseData) {
+    private async init(): Promise<void> {
+        const incomeData: IncomeCategory | null | void = await this.getIncomes();
+        const expenseData: ExpensesCategory | null | void = await this.getExpenses();
+        if (incomeData && expenseData && Array.isArray(incomeData) && Array.isArray(expenseData) ) {
             this.dataForChart.incomesTitle = incomeData.map(item => item.title);
             this.dataForChart.expensesTitle = expenseData.map(item => item.title);
         }
@@ -115,7 +150,7 @@ export class Main {
         this.getOperations().then();
     }
 
-    funcFillData() {
+    private funcFillData(): void {
         this.dataForChart.incomesData = [];
         this.dataForChart.expensesData = [];
         for (let i = 0; i < this.dataForChart.incomesTitle.length; i++) {
@@ -139,29 +174,39 @@ export class Main {
         }
     }
 
-    async getIncomes() {
-        const response = await IncomeService.getIncomes();
+    private async getIncomes(): Promise<IncomeCategory | null | void> {
+        const response: IncomeServiceReturnObjType = await IncomeService.getIncomes();
 
         if (response.error) {
             // alert(response.error);
             console.log(response.error);
             return response.redirect ? this.openNewRoute(response.redirect) : null;
         }
-        return response.incomes;
+        if (!response.incomes) {
+            console.error('No incomes data received');
+            return;
+        }
+
+        return response.incomes
     }
 
-    async getExpenses() {
-        const response = await ExpensesService.getExpenses();
+    private async getExpenses(): Promise<ExpensesCategory | null | void> {
+        const response: ExpensesServiceReturnObjType = await ExpensesService.getExpenses();
 
         if (response.error) {
             // alert(response.error);
             console.log(response.error);
             return response.redirect ? this.openNewRoute(response.redirect) : null;
         }
+        if (!response.expenses) {
+            console.error('No expenses data received');
+            return;
+        }
+
         return response.expenses;
     }
 
-    funcFilter(action) {
+    private funcFilter(action: string): PeriodDateType {
         switch (action) {
             case 'Сегодня':
                 this.periodDate.period = '';
@@ -185,15 +230,15 @@ export class Main {
         return this.periodDate;
     }
 
-    async getOperations(filter = this.periodDate) {
-        const response = await OperationsService.getOperations(filter);
+    private async getOperations(filter: PeriodDateType = this.periodDate): Promise<void | null> {
+        const response: OperationsServiceReturnObjType = await OperationsService.getOperations(filter);
         if (response.error) {
             // alert(response.error);
             console.log(response.error);
             return response.redirect ? this.openNewRoute(response.redirect) : null;
         }
 
-        if (response.operations) {
+        if (response.operations && Array.isArray(response.operations) ) {
             this.dataForChart.operationIncomes = response.operations.filter(item => item.type === 'income');
             this.dataForChart.operationExpenses = response.operations.filter(item => item.type === 'expense');
 
@@ -208,7 +253,7 @@ export class Main {
     }
 
 
-    showChart(objectData) {
+    showChart(objectData: DataForChartType) {
         this.myPieChartL ? this.myPieChartL.destroy() : null;
         this.myPieChartR ? this.myPieChartR.destroy() : null;
 
@@ -270,8 +315,8 @@ export class Main {
         };
 
         Chart.register(PieController, ArcElement, Tooltip, Legend, Title);
-        this.myPieChartL = new Chart(this.ctxLeft, configIncomes);
-        this.myPieChartR = new Chart(this.ctxRight, configExpenses);
+        this.myPieChartL = new Chart((this.ctxLeft as HTMLCanvasElement), configIncomes as any);
+        this.myPieChartR = new Chart((this.ctxRight as HTMLCanvasElement), configExpenses as any);
     }
 
 }

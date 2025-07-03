@@ -1,19 +1,24 @@
 import {UrlUtils} from "../../utils/url-utils";
 import {IncomeService} from "../../services/income-service";
+import {OpenNewRouteHandlerType} from "../../types/open-new-route-handler.type";
+import {IncomeServiceReturnObjDeleteType} from "../../types/income-service-return-obj.type";
 
 export class IncomeDelete {
-    constructor(openNewRoute) {
+    readonly openNewRoute: OpenNewRouteHandlerType;
+
+    constructor(openNewRoute: OpenNewRouteHandlerType) {
         this.openNewRoute = openNewRoute;
-        const id = UrlUtils.getUrlParam('id');
+        const id: string | null = UrlUtils.getUrlParam('id');
         if (!id) {
-            return this.openNewRoute('/');
+            this.openNewRoute('/');
+            return;
         }
 
         this.deleteIncome(id).then();
     }
 
-    async deleteIncome(id) {
-        const response = await IncomeService.deleteIncome(id);
+    private async deleteIncome(id: string): Promise< void| null> {
+        const response: IncomeServiceReturnObjDeleteType = await IncomeService.deleteIncome(id);
 
         if (response.error) {
             // alert(response.error);

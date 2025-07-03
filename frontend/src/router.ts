@@ -20,6 +20,7 @@ import {BalanceService} from "./services/balance-service";
 import {RouteType} from "./types/route.type";
 import {UserInfoNameType} from "./types/user-info-name.type";
 import {UserInfoType} from "./types/user-info.type";
+import {BalanceResultType} from "./types/balance-result.type";
 
 export class Router {
     private titlePageElement: HTMLElement | null;
@@ -72,9 +73,12 @@ export class Router {
             },
             {
                 route: '/logout',
-                load: () => {
+                load: (): void => {
                     new Logout(this.openNewRoute.bind(this));
-                }
+                },
+                unload:(): void => {
+                    this.userName = null;
+                },
 
             },
             {
@@ -203,7 +207,7 @@ export class Router {
         this.initEvents();
     }
 
-    initEvents() {
+    private initEvents(): void {
         window.addEventListener('DOMContentLoaded', this.activateRoute.bind(this));
         window.addEventListener('popstate', this.activateRoute.bind(this));
         document.addEventListener('click', this.clickHandler.bind(this));
@@ -213,7 +217,6 @@ export class Router {
         const currentRoute: string | null = window.location.pathname;
         history.pushState({}, '', url);
         await this.activateRoute(null, currentRoute);
-
     }
 
     private async clickHandler(e: MouseEvent): Promise<void> {
@@ -297,14 +300,14 @@ export class Router {
                     // document.body.classList.add('layout-fixed');
 
                     this.balanceElement = document.getElementById('balance');
-                    const userBalance = await BalanceService.getBalance();
+                    const userBalance: BalanceResultType = await BalanceService.getBalance();
                     if (this.balanceElement) {
                         this.balanceElement.innerText = userBalance.balance + '$';
                     }
 
                     this.profileNameElement = document.getElementById('profile-name');
                     if (!this.userName) {
-                        const userInfo: UserInfoType | UserInfoNameType = AuthUtils.getAuthInfo(AuthUtils.userinfoTokenKey) ? JSON.parse(AuthUtils.getAuthInfo(AuthUtils.userinfoTokenKey)) : '';
+                        const userInfo: UserInfoType | UserInfoNameType = AuthUtils.getAuthInfo(AuthUtils.userinfoTokenKey) ? JSON.parse(<string>AuthUtils.getAuthInfo(AuthUtils.userinfoTokenKey)) : '';
                         if (userInfo && (userInfo as UserInfoNameType).name) {
                             this.userName = (userInfo as UserInfoNameType).name;
                         }
@@ -382,8 +385,6 @@ export class Router {
                 }
             }, 1000)
         });
-
-
     }
 
 }

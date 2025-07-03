@@ -4,12 +4,12 @@ import {AuthRefreshType} from "../types/auth-refresh.type";
 import {AuthErrorType} from "../types/auth-error.type";
 
 export class AuthUtils {
-    static accessTokenKey: string = 'accessToken';
-    static refreshTokenKey: string = 'refreshToken';
-    static userinfoTokenKey: string = 'userinfo';
+    public static accessTokenKey: string = 'accessToken';
+    public static refreshTokenKey: string = 'refreshToken';
+    public static userinfoTokenKey: string = 'userinfo';
 
 
-    public static setAuthInfo(accessToken: string, refreshToken: string, userinfo: string | null = null): void {
+    public static setAuthInfo(accessToken: string, refreshToken: string, userinfo: {[key: string]: string} | null = null): void {
         localStorage.setItem(this.accessTokenKey, accessToken);
         localStorage.setItem(this.refreshTokenKey, refreshToken);
         if (userinfo) {
@@ -39,7 +39,7 @@ export class AuthUtils {
 
     public static async updateRefreshToken(): Promise<boolean> {
         let result: boolean = false;
-        const refreshToken: UserInfoType = this.getAuthInfo(this.refreshTokenKey);
+        const refreshToken: UserInfoType | string | null = this.getAuthInfo(this.refreshTokenKey);
         if (refreshToken) {
             const response: Response = await fetch(config.api + '/refresh', {
                 method: 'POST',

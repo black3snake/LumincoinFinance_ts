@@ -1,13 +1,13 @@
 export class CommonUtils {
 
-    static generateGridToolsColumn(entity, id) {
+    public static generateGridToolsColumn(entity:string, id: number): string {
         return '<div class="' + entity.slice(0, -1) + '-tools"> ' +
             '<a href="/' + entity + '/delete?id=' + id + '" class="trash"><img src="/images/trash.svg" alt="trash"></a>' +
             '<a href="/' + entity + '/edit?id=' + id + '" class="edit"><img src="/images/pen.svg" alt="pen"></a>' +
             '</div>';
     }
 
-    static showConfirmationDialog(message) {
+    public static showConfirmationDialog(message: string): Promise<boolean> {
         return new Promise((resolve) => {
             const modal = document.createElement('div');
             modal.classList.add('popup-container2');
@@ -21,16 +21,21 @@ export class CommonUtils {
             </div>`;
             document.body.appendChild(modal);
 
+            const popupDelete: HTMLElement | null = document.getElementById('popupDelete');
+            if (popupDelete) {
+                popupDelete.addEventListener('click', () => {
+                    document.body.removeChild(modal);
+                    resolve(true);
+                });
+            }
 
-            document.getElementById('popupDelete').addEventListener('click', () => {
-                document.body.removeChild(modal);
-                resolve(true);
-            });
-
-            document.getElementById('popupNotDelete').addEventListener('click', () => {
-                document.body.removeChild(modal);
-                resolve(false);
-            });
+            const popupNotDelete: HTMLElement | null = document.getElementById('popupNotDelete');
+            if (popupNotDelete) {
+                popupNotDelete.addEventListener('click', () => {
+                    document.body.removeChild(modal);
+                    resolve(false);
+                });
+            }
         });
     }
 

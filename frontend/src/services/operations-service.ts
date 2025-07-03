@@ -1,20 +1,28 @@
 import {HttpUtils} from "../utils/http-utils";
+import {PeriodDateType} from "../types/period-date.type";
+import {
+    OperationsCategoriesDeleteResponse,
+    OperationsCategoriesResponse, OperationsServiceReturnObjDeleteType, OperationsServiceReturnObjIdType,
+    OperationsServiceReturnObjType
+} from "../types/operations-service-return-obj.type";
+import {CreateDataType} from "../types/create-data.type";
+import {ChangeDataType} from "../types/change-data.type";
 
 export class OperationsService {
-    static async getOperations(filter) {
-        const returnObject = {
+    public static async getOperations(filter: PeriodDateType): Promise<OperationsServiceReturnObjType> {
+        const returnObject: OperationsServiceReturnObjType = {
             error: false,
             redirect: null,
             operations: null
         };
 
         const {period, dateFrom, dateTo} = filter;
-        const result = await HttpUtils.request(  dateFrom && dateTo ? `/operations?period=${period}&dateFrom=${dateFrom}&dateTo=${dateTo}` :
+        const result: OperationsCategoriesResponse = await HttpUtils.request(  dateFrom && dateTo ? `/operations?period=${period}&dateFrom=${dateFrom}&dateTo=${dateTo}` :
             `/operations?period=${period}`);
 
         if (result.redirect || result.error || !result.response) {
             // (result.response && (result.response.error || !result.response.message || result.response.message))) {
-            returnObject.error = 'Возникла ошибка при запросе операций';
+            console.log('Возникла ошибка при запросе операций');
             if (result.redirect) {
                 returnObject.redirect = result.redirect;  // перевод пользователя на другую страницу
             }
@@ -24,17 +32,17 @@ export class OperationsService {
         return returnObject;
     }
 
-    static async createOperation(data) {
-        const returnObject = {
+    public static async createOperation(data: CreateDataType): Promise<OperationsServiceReturnObjIdType> {
+        const returnObject: OperationsServiceReturnObjIdType = {
             error: false,
             redirect: null,
             id: null
         };
 
-        const result = await HttpUtils.request('/operations', 'POST', true, data);
+        const result: OperationsCategoriesResponse = await HttpUtils.request('/operations', 'POST', true, data);
 
         if (result.redirect || result.error || !result.response ) {
-            returnObject.error = 'Возникла ошибка при добавлении операции';
+            console.log('Возникла ошибка при добавлении операции');
             if (result.redirect) {
                 returnObject.redirect = result.redirect;  // перевод пользователя на другую страницу
             }
@@ -44,17 +52,17 @@ export class OperationsService {
         return returnObject;
     }
 
-    static async getOperation(id) {
-        const returnObject = {
+    public static async getOperation(id: string): Promise<OperationsServiceReturnObjType> {
+        const returnObject: OperationsServiceReturnObjType = {
             error: false,
             redirect: null,
             operations: null
         };
 
-        const result = await HttpUtils.request('/operations/' + id);
+        const result: OperationsCategoriesResponse = await HttpUtils.request('/operations/' + id);
 
         if (result.redirect || result.error || !result.response) {
-            returnObject.error = 'Возникла ошибка при запросе операции';
+            console.log('Возникла ошибка при запросе операции');
             if (result.redirect) {
                 returnObject.redirect = result.redirect;  // перевод пользователя на другую страницу
             }
@@ -64,15 +72,16 @@ export class OperationsService {
         return returnObject;
     }
 
-    static async updateOperation(id, data) {
-        const returnObject = {
+    public static async updateOperation(id: number, data: ChangeDataType): Promise<OperationsServiceReturnObjIdType> {
+        const returnObject: OperationsServiceReturnObjIdType = {
             error: false,
-            redirect: null
+            redirect: null,
+            id: null
         };
 
-        const result = await HttpUtils.request('/operations/' + id, 'PUT', true, data);
+        const result: OperationsCategoriesResponse = await HttpUtils.request('/operations/' + id, 'PUT', true, data);
         if (result.redirect || result.error || !result.response ) {
-            returnObject.error = 'Возникла ошибка при редактировании операции';
+            console.log('Возникла ошибка при редактировании операции');
             if (result.redirect) {
                 returnObject.redirect = result.redirect;  // перевод пользователя на другую страницу
             }
@@ -81,16 +90,16 @@ export class OperationsService {
         return returnObject;
     }
 
-    static async deleteOperation(id) {
-        const returnObject = {
+    public static async deleteOperation(id: string): Promise<OperationsServiceReturnObjDeleteType> {
+        const returnObject: OperationsServiceReturnObjDeleteType = {
             error: false,
             redirect: null,
         };
 
-        const result = await HttpUtils.request('/operations/' + id, 'DELETE');
+        const result: OperationsCategoriesDeleteResponse = await HttpUtils.request('/operations/' + id, 'DELETE');
 
         if (result.redirect || result.error || !result.response ) {
-            returnObject.error = 'Возникла ошибка при удалении операции';
+            console.log('Возникла ошибка при удалении операции');
             if (result.redirect) {
                 returnObject.redirect = result.redirect;  // перевод пользователя на другую страницу
             }

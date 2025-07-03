@@ -1,17 +1,35 @@
 import {UrlUtils} from "../../utils/url-utils";
 import {IncomeService} from "../../services/income-service";
 import {ValidationUtils} from "../../utils/validation-utils";
+import {OpenNewRouteHandlerType} from "../../types/open-new-route-handler.type";
+import {ValidationsType} from "../../types/validations.type";
+import {
+    IncomeCategory,
+    IncomeServiceReturnObjType
+} from "../../types/income-service-return-obj.type";
+import {ChangeDataType} from "../../types/change-data.type";
 
 export class IncomeEdit {
-    constructor(openNewRoute) {
-        this.openNewRoute = openNewRoute;
-        const id = UrlUtils.getUrlParam('id');
-        if (!id) {
-            return this.openNewRoute('/');
-        }
+    readonly openNewRoute: OpenNewRouteHandlerType;
+    private incomeEditInputElement: HTMLElement | null;
+    private validations: ValidationsType[] = [];
+    private incomeEditSaveBtnElement: HTMLElement | null;
+    private incomeOriginalData: IncomeCategory | null = null;
 
-        document.getElementById('incomeEditSaveBtn').addEventListener('click', this.updateIncome.bind(this));
+    constructor(openNewRoute: OpenNewRouteHandlerType) {
+        this.openNewRoute = openNewRoute;
         this.incomeEditInputElement = document.getElementById('incomeEdit_input');
+        this.incomeEditSaveBtnElement = document.getElementById('incomeEditSaveBtn')
+
+
+        const id: string|null = UrlUtils.getUrlParam('id');
+        if (!id) {
+            this.openNewRoute('/');
+            return;
+        }
+        if (this.incomeEditSaveBtnElement) {
+            this.incomeEditSaveBtnElement.addEventListener('click', this.updateIncome.bind(this));
+        }
 
         this.validations = [
             {element: this.incomeEditInputElement}
@@ -19,8 +37,8 @@ export class IncomeEdit {
         this.init(id).then();
     }
 
-    async init(id) {
-        const incomeData = await this.getIncome(id);
+    private async init(id: string): Promise<void> {
+        const incomeData: IncomeCategory | null | void = await this.getIncome(id);
         if (incomeData) {
             this.showIncome(incomeData);
             // if (orderData.freelancer) {
@@ -29,35 +47,39 @@ export class IncomeEdit {
         }
     }
 
-    async getIncome(id) {
-        const response = await IncomeService.getIncome(id);
+    public async getIncome(id:string): Promise<IncomeCategory| null | void> {
+        const response: IncomeServiceReturnObjType = await IncomeService.getIncome(id);
 
         if (response.error) {
             // alert(response.error);
             console.log(response.error);
-            return response.redirect ? this.openNewRoute(response.redirect) : null;
+            return response.redirect ? this.openNewRoute(response.redirect ) : null;
         }
 
         this.incomeOriginalData = response.incomes;
         return response.incomes;
     }
 
-    showIncome(income) {
-        this.incomeEditInputElement.value = income.title;
+    private showIncome(income: IncomeCategory): void {
+        if (this.incomeEditInputElement) {
+            (this.incomeEditInputElement as HTMLInputElement).value = income.title;
+        }
     }
 
-    async updateIncome(e) {
+    public async updateIncome(e: Event): Promise<void | null> {
         e.preventDefault();
 
         if (ValidationUtils.validationForm(this.validations)) {
-            const changedData = {};
+            const changedData: ChangeDataType = {title:''};
 
-            if (this.incomeEditInputElement.value !== this.incomeOriginalData.title) {
-                changedData.title = this.incomeEditInputElement.value;
+            if (this.incomeEditInputElement && this.incomeOriginalData) {
+                if ((this.incomeEditInputElement as HTMLInputElement).value !== this.incomeOriginalData.title) {
+                    changedData.title = (this.incomeEditInputElement as HTMLInputElement).value;
+                }
             }
 
-            if (Object.keys(changedData).length > 0) {
-                const response = await IncomeService.updateIncome(this.incomeOriginalData.id, changedData);
+            if (Object.keys(changedData).length > 0 && this.incomeOriginalData) {
+                const response: IncomeServiceReturnObjType = await IncomeService.updateIncome(this.incomeOriginalData.id, changedData);
 
                 if (response.error) {
                     // alert(response.error);
